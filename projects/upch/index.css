@@ -1,0 +1,52 @@
+.sidebar {
+  /* with help from https://www.w3schools.com/howto/howto_css_fixed_sidebar.asp */
+  height: 100%;
+  width: 500px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #789;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+.descriptive-text {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.buttonsDiv {
+  position: absolute;
+  bottom: 0;
+  margin-left: 50px;
+  margin-bottom: 20px;
+}
+
+.line-colors-key {
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-bottom: 45px;
+  position: absolute;
+  bottom: 0;
+}
+
+.upch {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-left: 500px;
+  padding: 0px 10px;
+  width: '100%';
+  min-height: 90% !important;
+  height: 90%;
+}
+
+html,
+body {
+  min-height: 100% !important;
+  height: 100%;
+}
+
+.pointsContainer {
+  cursor: pointer;
+}
