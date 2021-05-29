@@ -1,6 +1,6 @@
 const MESSAGES = {
   default:
-    '<p> The <a href="https://www.cs.princeton.edu/~chazelle/temp/451/451-2019/KirkSeidel.pdf">Ultimate Planar Convex Hull Algorithm?</a> is an output-sensitive convex hull algorithm by David Kirkpatrick and Patrick Seidel. The name is derived from its O(nlogh) runtime, which is asymptotically as fast as one can hope for in computing the convex hull of a point set.</p><br><p>To start, click in the box on the right side of the screen to add points to the point set, and hit the "Run" button below when you\'re ready to start the visualization.</p>',
+    '<p> The <a href="https://www.cs.princeton.edu/~chazelle/temp/451/451-2019/KirkSeidel.pdf">Ultimate Planar Convex Hull Algorithm</a> is an output-sensitive convex hull algorithm by David Kirkpatrick and Raimund Seidel. The name is derived from its O(nlogh) runtime, which is asymptotically as fast as one can hope for in computing the convex hull of a point set.</p><br><p>To start, click in the box on the right side of the screen to add points to the point set, and hit the "Run" button below when you\'re ready to start the visualization.</p>',
   isUpper:
     '<p>Like many convex hull algorithms, this algorithm computes the upper hull separately from the lower hull, and then merges the two together in constant time. We start with the upper hull, which may contain any points above the line between the minimum and maximum point, sorted by x coordinate.</p>',
   medianLine: 'Now we draw the median line, dividing our current point set into two.',
@@ -14,7 +14,7 @@ function setMessage(msg) {
 setMessage(MESSAGES.default);
 
 var CUR_RUNNING = false;
-const TIME_UNIT = 500;
+const TIME_UNIT = 250;
 
 var FUNC_STACK = [];
 var FUNC_QUEUE = [];
@@ -82,6 +82,7 @@ pointsContainer.on('click', (event) => {
 });
 
 function start() {
+  console.log('points to start: ', pointsArr);
   if (pointsArr.length <= 2) {
     window.alert('Please make sure you draw at least three points in the point set.');
     return;
@@ -96,7 +97,7 @@ function start() {
 }
 
 function runUPCH(isUpper = true) {
-  setMessage(MESSAGES.isUpper);
+  // setMessage(MESSAGES.isUpper);
 
   const pointsSortedByX = sortByX(pointsArr);
   const minByX = pointsSortedByX[0];
@@ -120,9 +121,9 @@ function runUPCH(isUpper = true) {
 }
 
 function splitPointsInHalf(originalArr, curPointsArr, splitLine) {
-  setMessage(
-    'We now partition our potential upper hull vertices into two halves, separated by the median of the point subset by x-coordinate. We color the points in the left partition red, and those in the right partition blue.',
-  );
+  // setMessage(
+  //   'We now partition our potential upper hull vertices into two halves, separated by the median of the point subset by x-coordinate. We color the points in the left partition red, and those in the right partition blue.',
+  // );
   const medianX = getMedianByX(sortByX(curPointsArr));
   const lineFunc = getLineFunc(splitLine);
 
@@ -146,7 +147,11 @@ function splitPointsInHalf(originalArr, curPointsArr, splitLine) {
 }
 
 function pairUpPoints(originalArr, curPointsArr, medianX) {
-  setMessage('Next we randomly pair up points and draw lines between them.');
+  // setMessage('Next we randomly pair up points and draw lines between them.');
+  if (curPointsArr.length == 2) {
+    addHullEdge(originalArr, curPointsArr, curPointsArr[0], curPointsArr[1]);
+    return;
+  }
   const shuffledArr = shuffle(curPointsArr);
   var pairs = [];
   for (var i = 0; i < shuffledArr.length - 1; i = i + 2) {
@@ -164,7 +169,7 @@ function pairUpPoints(originalArr, curPointsArr, medianX) {
 }
 
 function findMedianSlope(originalArr, curPointsArr, pairs, newPointsArr, medianX) {
-  setMessage('We find the median of all these slopes, which can be seen highlighted in pink.');
+  // setMessage('We find the median of all these slopes, which can be seen highlighted in pink.');
   const slopes = pairs.map((pair) => {
     const curLineID = getLineID(pair[0], pair[1]);
     return [(pair[1][1] - pair[0][1]) / (pair[1][0] - pair[0][0]), curLineID, pair];
@@ -212,7 +217,7 @@ function findLastHitPoint(originalArr, curPointsArr, pairs, median, newPointsArr
     disableNextBtn();
     d3.select(`#${median[1]}`)
       .transition()
-      .duration(TIME_UNIT * 3)
+      .duration(TIME_UNIT * 6)
       .attr('y1', f(0) + changeY)
       .attr('y2', f(w) + changeY)
       .on('end', enableNextBtn);
@@ -246,7 +251,7 @@ function findLastHitPoint(originalArr, curPointsArr, pairs, median, newPointsArr
           '<br/>Here, our last point is <span style="background-color: blue">blue</span>. This implies that the current line we are using to try and connect the red point set to the blue point set is too shallow, and so we need to make it steeper.',
         );
       }
-      setMessage(message);
+      // setMessage(message);
 
       FUNC_QUEUE.push(() => {
         throwAwayData(originalArr, curPointsArr, pairs, median, pointColor, newPointsArr, medianX);
@@ -373,15 +378,22 @@ function throwAwayPointsInsideTrapezoid(originalArr, curPointsArr, p1, p2) {
       }
     }
   }
-  console.log('LEFT: ', left);
-  console.log('RIGHT: ', right);
+
   const leftMore = p1[0] < p2[0] ? p1 : p2;
   const rightMore = p1[0] > p2[0] ? p1 : p2;
-  if (left.length > 1)
-    FUNC_QUEUE.push(() => splitPointsInHalf(originalArr, left, [leftMore, MIN_X]));
+  if (left.length > 1) {
+    left.push(leftMore);
+    left.push(MIN_X);
+  }
+  if (right.length > 1) {
+    right.push(rightMore);
+    right.push(MAX_X);
+  }
+  console.log('LEFT: ', left);
+  console.log('RIGHT: ', right);
+  if (left.length > 1) FUNC_QUEUE.push(() => splitPointsInHalf(left, left, [leftMore, MIN_X]));
   else FUNC_QUEUE.push(() => solveBaseCase(left, MIN_X, leftMore));
-  if (right.length > 1)
-    FUNC_STACK.push(() => splitPointsInHalf(originalArr, right, [rightMore, MIN_X]));
+  if (right.length > 1) FUNC_STACK.push(() => splitPointsInHalf(right, right, [rightMore, MAX_X]));
   else FUNC_STACK.push(() => solveBaseCase(right, MAX_X, rightMore));
 }
 
@@ -394,14 +406,31 @@ function solveBaseCase(d, chP1, chP2) {
     deleteLine(getLineID(chP1, chP2));
     deleteLine(getLineID(chP2, chP1));
     if (d.length == 1) {
-      HULL_EDGES.push([d[0], chP1]);
-      HULL_EDGES.push([d[0], chP2]);
-
-      drawLine(d[0], chP1, 'green');
-      drawLine(d[0], chP2, 'green');
+      const deg1 = getHullVertexDegree(chP1);
+      const deg2 = getHullVertexDegree(chP2);
+      if (deg1 < 2) {
+        HULL_EDGES.push([d[0], chP1]);
+        drawLine(d[0], chP1, 'green');
+      }
+      if (deg2 < 2) {
+        HULL_EDGES.push([d[0], chP2]);
+        drawLine(d[0], chP2, 'green');
+      }
       return;
     }
   }
+}
+
+function getHullVertexDegree(p) {
+  const px = p[0];
+  const py = p[1];
+  var deg = 0;
+  for (var i = 0; i < HULL_EDGES.length; i++) {
+    const c = HULL_EDGES[i];
+    if (c[0][0] == px && c[0][1] == py) deg += 1;
+    else if (c[1][0] == px && c[1][1] == py) deg += 1;
+  }
+  return deg;
 }
 
 function reset() {
@@ -431,6 +460,75 @@ function enableStartBtn() {
 
 function disableStartBtn() {
   document.getElementById('startBtn').disabled = true;
+}
+
+function importPointSet() {
+  pointsArr = [
+    [45, 403],
+    [76, 229],
+    [106, 361],
+    [134, 339],
+    [136, 314],
+    [143, 360],
+    [161, 283],
+    [165, 340],
+    [177, 368],
+    [178, 312],
+    [184, 256],
+    [194, 144],
+    [197, 286],
+    [202, 219],
+    [203, 257],
+    [204, 328],
+    [214, 304],
+    [220, 286],
+    [225, 239],
+    [229, 187],
+    [230, 203],
+    [256, 113],
+    [286, 174],
+    [297, 270],
+    [300, 211],
+    [303, 114],
+    [307, 244],
+    [308, 349],
+    [313, 186],
+    [314, 303],
+    [330, 331],
+    [330, 220],
+    [337, 248],
+    [338, 281],
+    [344, 367],
+    [345, 310],
+    [349, 298],
+    [353, 328],
+    [365, 147],
+    [476, 404],
+  ];
+  for (var i = 0; i < pointsArr.length; i++) {
+    const curPoint = pointsArr[i];
+    pointCircles.push({
+      x_axis: curPoint[0],
+      y_axis: curPoint[1],
+      radius: 6,
+      color: 'black',
+      id: `a-${curPoint[0]}-${curPoint[1]}`,
+    });
+  }
+
+  var circles = pointsContainer
+    .selectAll('circle') // For new circle, go through the update process
+    .data(pointCircles)
+    .enter()
+    .append('circle');
+
+  var circleAttributes = circles
+    .attr('cx', (d) => d.x_axis)
+    .attr('cy', (d) => d.y_axis)
+    .attr('r', (d) => d.radius)
+    .attr('id', (d) => d.id)
+    .style('fill', (d) => d.color);
+  document.getElementById('importBtn').disabled = true;
 }
 
 function isAboveLine(point, line) {
